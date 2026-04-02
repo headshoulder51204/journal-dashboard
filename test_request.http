@@ -1,0 +1,44 @@
+### 1. 전송 예시: JSON 객체 형태 (LLM 응답이 직접 매핑될 때)
+POST http://localhost:8000/api/webhook/analysis
+Content-Type: application/json
+
+{
+  "result": {
+    "trace_id": "TEST-JSON-OBJ-001",
+    "status": "SUCCESS",
+    "llm_model": "GPT-4o",
+    "severity": "Medium",
+    "root_cause": "데이터베이스 커넥션 타임아웃 발생",
+    "recommendations": ["커넥션 풀 크기 상향", "쿼리 최적화 수행"],
+    "anomaly_context": "Peak Time에 트래픽이 200% 증가함",
+    "total_events": 5400,
+    "duration": "5m 12s",
+    "affected_nodes": 2,
+    "error_distribution": { "Timeout": 80, "Network": 20 },
+    "log_entries": [
+      {
+        "timestamp": "2024-10-25 14:00:01",
+        "source": "api-server",
+        "status": "504 Timeout",
+        "message": "Connection pool exhausted",
+        "metadata_info": { "node_id": "node-A", "latency": "30s" }
+      }
+    ]
+  }
+}
+
+### 2. 전송 예시: JSON 문자열 형태 (LLM의 전체 응답이 문자열로 올 때)
+POST http://localhost:8000/api/webhook/analysis
+Content-Type: application/json
+
+{
+  "result": "{\"trace_id\": \"TEST-STR-002\", \"status\": \"SUCCESS\", \"llm_model\": \"Claude 3.5\", \"severity\": \"High\", \"root_cause\": \"인증 서버 응답 지연\", \"recommendations\": [\"캐시 레이어 도입\"], \"log_entries\": []}"
+}
+
+### 3. 전송 예시: 단순 텍스트 형태 (구조화되지 않은 LLM 응답)
+POST http://localhost:8000/api/webhook/analysis
+Content-Type: application/json
+
+{
+  "result": "장애 분석 결과: 현재 시스템의 주요 이슈는 네트워크 대역폭 부족으로 보입니다. 특정 구간에서 패킷 손실이 5% 이상 발생하고 있으며, 이를 해결하기 위해 라우팅 설정을 재검토해야 합니다."
+}

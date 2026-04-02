@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytica | Log Intelligence Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="logo">
+            <i class="fa-solid fa-cube text-primary"></i>
+            <span>Analytica</span>
+        </div>
+        <a href="index.html" class="nav-item active">
+            <i class="fa-solid fa-chart-line"></i> Dashboard
+        </a>
+        <a href="index.html" class="nav-item">
+            <i class="fa-solid fa-file-invoice"></i> Reports
+        </a>
+        <a href="#" class="nav-item">
+            <i class="fa-solid fa-magnifying-glass"></i> Search
+        </a>
+        <div style="flex-grow: 1;"></div>
+        <a href="#" class="nav-item">
+            <i class="fa-solid fa-gear"></i> Settings
+        </a>
+    </nav>
+
+    <header>
+        <div class="header-left">
+            <h1>Historical Reports</h1>
+            <p>Detailed audit of system logs and performance traces.</p>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-primary" id="analyzeBtn" style="padding: 12px 24px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Analyze with AI
+            </button>
+        </div>
+    </header>
+
+    <section class="stats-container">
+        <div class="stat-card">
+            <div class="stat-label">Total Analyzed</div>
+            <div class="stat-value" id="totalAnalyzed">0</div>
+            <div style="color: var(--success); font-size: 13px; font-weight: 500;">
+                <i class="fa-solid fa-arrow-up"></i> 12% increase from last month
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Success Rate</div>
+            <div class="stat-value" id="successRate">0%</div>
+            <div style="background: #eee; height: 6px; border-radius: 3px; margin-top: 10px;">
+                <div id="successProgress" style="background: var(--success); height: 100%; border-radius: 3px; width: 0%;"></div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Critical Errors</div>
+            <div class="stat-value" id="criticalErrors" style="color: var(--error);">0</div>
+            <div style="color: var(--text-secondary); font-size: 13px;">Requires immediate attention</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Processing Time</div>
+            <div class="stat-value" id="avgProcTime">0s</div>
+            <div style="color: var(--text-secondary); font-size: 13px;">Average across all clusters</div>
+        </div>
+    </section>
+
+    <main class="content-wrapper">
+        <div class="reports-list">
+            <div style="padding: 24px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; gap: 12px;">
+                    <button class="badge badge-info">All Reports</button>
+                    <button class="badge" style="background: #f5f5f7; color: var(--text-secondary); border: none; cursor: pointer;">Failed</button>
+                </div>
+                <button class="badge" style="background: #f5f5f7; color: var(--text-secondary); border: none; cursor: pointer;">
+                    <i class="fa-solid fa-download"></i> Export CSV
+                </button>
+            </div>
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>Report Name</th>
+                        <th>Date Generated</th>
+                        <th>Status</th>
+                        <th>LLM Model</th>
+                        <th>Severity</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="reportsTableBody">
+                    <!-- Data injected via JS -->
+                </tbody>
+            </table>
+            <div id="noDataMessage" style="padding: 60px; text-align: center; color: var(--text-secondary); display: none;">
+                <i class="fa-solid fa-folder-open" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
+                <p>No reports found. Send a webhook to start analyzing.</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
