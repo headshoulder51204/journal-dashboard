@@ -30,9 +30,10 @@ class ReportBase(BaseModel):
     duration: Optional[str] = None
     affected_nodes: Optional[int] = 0
     error_distribution: Optional[dict] = None
+    result: Optional[str] = None  # Detailed AI Analysis in Markdown
 
 class ReportCreate(ReportBase):
-    log_entries: List[LogEntryCreate]
+    log_entries: Optional[List[LogEntryCreate]] = []
 
 class SimpleResultInput(BaseModel):
     result: Any  # Can be a string or a dict/JSON object

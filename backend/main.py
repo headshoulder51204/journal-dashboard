@@ -40,46 +40,17 @@ async def startup_event():
 import json
 
 @app.post("/api/webhook/analysis", response_model=schemas.Report)
-def receive_analysis(payload: schemas.SimpleResultInput, db: Session = Depends(get_db)):
-    """Receives a single 'result' field, parses it, and saves to the database."""
-    result_data = payload.result
+def receive_analysis(payload: schemas.ReportCreate, db: Session = Depends(get_db)):
+    """Receives analysis data according to the structured payload and saves/updates it."""
+    report_data = payload.dict(exclude={"log_entries"})
     
-    # If it's a string, try parsing it as JSON
-    if isinstance(result_data, str):
-        try:
-            result_data = json.loads(result_data)
-        except json.JSONDecodeError:
-            # Fallback for plain text: wrap it in a basic report structure
-            result_data = {
-                "trace_id": f"RAW-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
-                "status": "SUCCESS",
-                "llm_model": "LLM-Response",
-                "severity": "Low",
-                "root_cause": result_data,
-                "recommendations": ["Review the full output for details."],
-                "log_entries": []
-            }
-    
-    # Validation/Defaults for structure
-    report_data = {
-        "trace_id": result_data.get("trace_id", f"GEN-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"),
-        "status": result_data.get("status", "SUCCESS"),
-        "llm_model": result_data.get("llm_model", "Unknown"),
-        "severity": result_data.get("severity", "Medium"),
-        "root_cause": result_data.get("root_cause", str(result_data)),
-        "recommendations": result_data.get("recommendations", []),
-        "anomaly_context": result_data.get("anomaly_context", ""),
-        "total_events": result_data.get("total_events", 0),
-        "duration": result_data.get("duration", "0s"),
-        "affected_nodes": result_data.get("affected_nodes", 0),
-        "error_distribution": result_data.get("error_distribution", {})
-    }
-
-    # Save logic
+    # Check for existing report
     db_report = db.query(models.Report).filter(models.Report.trace_id == report_data["trace_id"]).first()
+    
     if db_report:
-        for var, value in report_data.items():
-            setattr(db_report, var, value)
+        for key, value in report_data.items():
+            setattr(db_report, key, value)
+        # Refresh log entries by deleting and re-adding if provided
         db.query(models.LogEntry).filter(models.LogEntry.report_id == db_report.id).delete()
     else:
         db_report = models.Report(**report_data)
@@ -88,18 +59,13 @@ def receive_analysis(payload: schemas.SimpleResultInput, db: Session = Depends(g
         db.refresh(db_report)
 
     # Add log entries if present
-    log_entries = result_data.get("log_entries", [])
-    for entry in log_entries:
-        db_entry = models.LogEntry(
-            report_id=db_report.id,
-            timestamp=entry.get("timestamp", ""),
-            source=entry.get("source", ""),
-            status=entry.get("status", ""),
-            message=entry.get("message", ""),
-            stack_trace=entry.get("stack_trace", ""),
-            metadata_info=entry.get("metadata_info", {})
-        )
-        db.add(db_entry)
+    if payload.log_entries:
+        for entry in payload.log_entries:
+            db_entry = models.LogEntry(
+                report_id=db_report.id,
+                **entry.dict()
+            )
+            db.add(db_entry)
     
     db.commit()
     db.refresh(db_report)

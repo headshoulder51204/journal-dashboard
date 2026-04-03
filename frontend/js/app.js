@@ -59,6 +59,12 @@ async function loadReportDetails(traceId) {
         document.getElementById('rootCauseText').innerText = report.root_cause;
         document.getElementById('anomalyContext').innerText = report.anomaly_context;
         
+        // Detailed Analysis Result (Markdown)
+        const detailedContent = document.getElementById('detailedAnalysisContent');
+        if (detailedContent) {
+            detailedContent.innerText = report.result || "No detailed report provided.";
+        }
+        
         const sevBadge = document.getElementById('severityBadge');
         sevBadge.innerText = report.severity.toUpperCase();
         sevBadge.className = report.severity === 'Critical' ? 'badge badge-error' : 'badge badge-warning';

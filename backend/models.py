@@ -26,6 +26,7 @@ class Report(Base):
     duration = Column(String)
     affected_nodes = Column(Integer)
     error_distribution = Column(JSON)  # { "Timeout Errors": 64, "Auth Failure": 22, ... }
+    result = Column(Text)  # Detailed AI Analysis in Markdown
     
     log_entries = relationship("LogEntry", back_populates="report")
 
