@@ -24,6 +24,16 @@ This project is a modern, high-performance log analysis dashboard that collects 
     - **Dashboard**: [http://localhost:8000](http://localhost:8000)
     - **API Docs (Swagger)**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
+## ☁️ Vercel Deployment
+This project is pre-configured for Vercel deployment using `vercel.json`.
+
+**Critial Step**:
+1.  In your Vercel Project **Settings > General**, ensure **Root Directory** is set to the **Project Root** (empty or `.`), NOT the `backend` folder.
+2.  Deploy by pushing to your main branch (Git integration) or using `vercel` CLI.
+3.  Vercel will automatically:
+    - Serve `frontend/` as static assets.
+    - Serve `backend/main.py` as a serverless Python function mapped to `/api`.
+
 ## 📡 API Specification (Webhook)
 To send a new log analysis to the dashboard:
 
