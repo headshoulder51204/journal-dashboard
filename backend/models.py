@@ -1,7 +1,10 @@
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, JSON, DateTime
 from sqlalchemy.orm import relationship
 from datetime import datetime
-from .database import Base
+try:
+    from .database import Base
+except ImportError:
+    from database import Base
 
 class Report(Base):
     __tablename__ = "reports"

@@ -57,3 +57,10 @@ To send a new log analysis to the dashboard:
 
 ## 🛡 License
 MIT License. Created by Antigravity AI.
+
+---
+**Repository**: [https://github.com/headshoulder51204/journal-dashboard.git](https://github.com/headshoulder51204/journal-dashboard.git)
+<p align="center">
+  <img src="https://img.shields.io/badge/Maintained%3F-yes-green.svg" alt="Maintained">
+  <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License">
+</p>

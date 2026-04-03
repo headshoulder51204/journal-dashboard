@@ -4,8 +4,11 @@ from typing import List
 from datetime import datetime, timedelta
 import os
 
-from . import models, schemas, database
-from .database import SessionLocal, engine
+try:
+    from . import models, schemas, database
+except ImportError:
+    import models, schemas, database
+from database import SessionLocal, engine
 
 # Create the database tables
 models.Base.metadata.create_all(bind=engine)
@@ -115,4 +118,7 @@ def get_report(trace_id: str, db: Session = Depends(get_db)):
 
 # Serve static files for frontend
 from fastapi.staticfiles import StaticFiles
-app.mount("/", StaticFiles(directory="frontend", html=True), name="static")
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+frontend_dir = os.path.join(base_dir, "frontend")
+if os.path.exists(frontend_dir):
+    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="static")
