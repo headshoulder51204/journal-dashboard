@@ -91,6 +91,48 @@
                 No detailed report provided.
             </div>
         </article>
+        <!-- Analysis Metadata -->
+        <section class="detail-card" style="margin-top: 40px; background: #fafafa;">
+            <h3 style="font-size: 18px; margin-bottom: 24px;"><i class="fa-solid fa-circle-info"></i> Analysis Metadata</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;">
+                <div>
+                    <div style="margin-bottom: 16px;">
+                        <span style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; display: block; margin-bottom: 4px;">Host / Source</span>
+                        <span id="metaHost" style="font-weight: 600; color: var(--text-main);">-</span>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <span style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; display: block; margin-bottom: 4px;">Log File Path</span>
+                        <code id="metaLogFile" style="font-size: 13px; color: var(--primary); background: rgba(0,122,255,0.05); padding: 4px 8px; border-radius: 6px;">-</code>
+                    </div>
+                    <div>
+                        <span style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; display: block; margin-bottom: 4px;">Analysis Window</span>
+                        <span id="metaTimeRange" style="font-weight: 600;">-</span>
+                        <span id="metaUnit" class="badge" style="margin-left: 8px; font-size: 10px;">-</span>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                    <div style="background: white; padding: 16px; border-radius: 12px; border: 1px solid #eee;">
+                        <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase;">Tokens Used</div>
+                        <div id="metaTokens" style="font-size: 20px; font-weight: 700;">0</div>
+                    </div>
+                    <div style="background: white; padding: 16px; border-radius: 12px; border: 1px solid #eee;">
+                        <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase;">Chunks</div>
+                        <div id="metaChunks" style="font-size: 20px; font-weight: 700;">0</div>
+                    </div>
+                    <div style="background: white; padding: 16px; border-radius: 12px; border: 1px solid #eee;">
+                        <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase;">Total Lines</div>
+                        <div id="metaLines" style="font-size: 20px; font-weight: 700;">0</div>
+                    </div>
+                    <div style="background: white; padding: 16px; border-radius: 12px; border: 1px solid #eee;">
+                        <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase;">Match Count</div>
+                        <div id="metaMatches" style="font-size: 20px; font-weight: 700;">0</div>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #ddd; font-size: 12px; color: var(--text-secondary);">
+                <i class="fa-solid fa-fingerprint"></i> Log Content Hash: <span id="metaHash" style="font-family: monospace;">-</span>
+            </div>
+        </section>
 
         <section class="detail-grid" style="margin-top: 40px;">
             <div class="detail-card">

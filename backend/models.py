@@ -11,17 +11,31 @@ class Report(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     trace_id = Column(String, unique=True, index=True)
+    title = Column(String)
+    host = Column(String)
+    log_file = Column(String)
+    since = Column(String)
+    until = Column(String)
+    unit = Column(String)
+    
     status = Column(String)  # SUCCESS, FAILED, PROCESSING
     llm_model = Column(String)
     severity = Column(String)  # Critical, Medium, Low
     date_generated = Column(DateTime, default=datetime.utcnow)
+    
+    # Stats
+    tokens_used = Column(Integer)
+    chunks_analyzed = Column(Integer)
+    total_lines = Column(Integer)
+    match_count = Column(Integer)
+    log_hash = Column(String)
     
     # AI Analysis
     root_cause = Column(Text)
     recommendations = Column(JSON)  # List of recommended actions
     anomaly_context = Column(Text)
     
-    # Stats
+    # Legacy/Additional Stats
     total_events = Column(Integer)
     duration = Column(String)
     affected_nodes = Column(Integer)

@@ -23,8 +23,8 @@ async function loadReports() {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>
-                    <div style="font-weight: 700;">${report.trace_id}</div>
-                    <div style="font-size: 11px; color: #86868b;">Cluster: ${report.affected_nodes} Nodes</div>
+                    <div style="font-weight: 700;">${report.title || report.trace_id}</div>
+                    <div style="font-size: 11px; color: #86868b;"><i class="fa-solid fa-server"></i> Host: ${report.host || 'Unknown'} | Files: ${report.total_lines || 0} Lines</div>
                 </td>
                 <td>${formatDate(report.date_generated)}</td>
                 <td><span class="badge ${report.status === 'SUCCESS' ? 'badge-success' : 'badge-error'}">${report.status}</span></td>
@@ -54,10 +54,23 @@ async function loadReportDetails(traceId) {
         const report = await response.json();
 
         // Update basic info
-        document.getElementById('detailTitle').innerText = `Trace ID #${report.trace_id}`;
+        document.getElementById('detailTitle').innerText = report.title || `Trace ID #${report.trace_id}`;
         document.getElementById('llmModelName').innerText = report.llm_model;
-        document.getElementById('rootCauseText').innerText = report.root_cause;
-        document.getElementById('anomalyContext').innerText = report.anomaly_context;
+        document.getElementById('rootCauseText').innerText = report.root_cause || "Root cause analysis not available.";
+        document.getElementById('anomalyContext').innerText = report.anomaly_context || "No context provided.";
+
+        // Update Metadata section
+        if (document.getElementById('metaHost')) {
+            document.getElementById('metaHost').innerText = report.host || 'Unknown';
+            document.getElementById('metaLogFile').innerText = report.log_file || 'N/A';
+            document.getElementById('metaTimeRange').innerText = `${report.since || '-'} ~ ${report.until || '-'}`;
+            document.getElementById('metaUnit').innerText = report.unit || '';
+            document.getElementById('metaTokens').innerText = (report.tokens_used || 0).toLocaleString();
+            document.getElementById('metaChunks').innerText = (report.chunks_analyzed || 0).toLocaleString();
+            document.getElementById('metaLines').innerText = (report.total_lines || 0).toLocaleString();
+            document.getElementById('metaMatches').innerText = (report.match_count || 0).toLocaleString();
+            document.getElementById('metaHash').innerText = report.log_hash || 'N/A';
+        }
         
         // Detailed Analysis Result (Markdown)
         const detailedContent = document.getElementById('detailedAnalysisContent');
@@ -173,33 +186,22 @@ if (document.getElementById('reportsTableBody')) {
 const analyzeBtn = document.getElementById('analyzeBtn');
 if(analyzeBtn) {
     analyzeBtn.onclick = async () => {
-        alert("Mock: Sending analysis data to webhook...");
+        alert("Mock: Sending new formatted analysis data to webhook...");
         const mockData = {
-            trace_id: "ALPHA-" + Math.floor(Math.random()*1000),
-            status: "SUCCESS",
-            llm_model: "GPT-4o",
-            severity: "Critical",
-            root_cause: "The incident correlates with a 40% spike in Zombie Connections detected by the load balancer. AI analysis suggests a Circular Dependency between the Auth Service and the primary DB cluster.",
-            anomaly_context: "92% of affected packets show corrupted header metadata inconsistent with standard TLS handshakes.",
-            total_events: 142802,
-            duration: "18m 42s",
-            affected_nodes: 14,
-            recommendations: [
-                "Implement exponential backoff on auth-microservice-v2 retry logic.",
-                "Increase connection pool timeout to 45s for DB read operations.",
-                "Purge Redis cache for specific matching keys."
-            ],
-            error_distribution: { "Timeout Errors": 64, "Auth Failure": 22, "DNS Refusal": 14 },
-            log_entries: [
-                {
-                    timestamp: "04:22:31.442",
-                    source: "gw-ingress-04",
-                    status: "200 OK",
-                    message: "Request handoff initiated to auth-svc-01...",
-                    stack_trace: "ERROR [auth-svc-01] 504 Gateway Timeout\nat internal/modules/auth/pipeline.js:142:11\nctx: {\n  'trace_id': '832c-49aa-9111',\n  'retries': 4\n}",
-                    metadata_info: { node_id: "US-EAST-1A", client_ip: "192.168.1.184", protocol: "gRPC", latency: "38,001ms" }
-                }
-            ]
+            "title": "TEST-JSON-OBJ-" + Math.floor(Math.random()*1000),
+            "host": "localhost",
+            "log_file": "/var/log/syslog",
+            "since": "2024-10-25 14:00:01",
+            "until": "2024-10-25 15:30:00",
+            "unit": "minute",
+            "model": "GPT-4o",
+            "tokens_used": 1540,
+            "chunks_analyzed": 12,
+            "total_lines": 5000,
+            "match_count": 120,
+            "log_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "created_at": "2024-10-25 14:00:01",
+            "analysis": "## 인시던트 상세 분석 리포트\n\n**원인 분석**\n현재 시스템의 DB 연결 요청이 임계치를 초과하였습니다. 이는 특정 시간대의 프로모션 트래픽 유입에 따른 것으로 판단됩니다.\n\n**조치 사항**\n1. 커넥션 풀을 20에서 100으로 증설 완료.\n2. 슬로우 쿼리 로그를 기반으로 인덱스 재구성 예정."
         };
         
         await fetch('/api/webhook/analysis', {
