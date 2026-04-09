@@ -3,15 +3,21 @@ from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime, timedelta
 import os
+import sys
+
+# Add the current directory to sys.path to help Vercel find modules
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
 
 try:
-    from . import models, schemas, database
-except ImportError:
-    import models, schemas, database
-try:
-    from .database import SessionLocal, engine
-except ImportError:
+    import models
+    import schemas
+    import database
     from database import SessionLocal, engine
+except ImportError:
+    from . import models, schemas, database
+    from .database import SessionLocal, engine
 
 # Create the database tables
 models.Base.metadata.create_all(bind=engine)
