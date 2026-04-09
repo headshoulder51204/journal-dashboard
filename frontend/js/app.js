@@ -74,8 +74,12 @@ async function loadReportDetails(traceId) {
         
         // Detailed Analysis Result (Markdown)
         const detailedContent = document.getElementById('detailedAnalysisContent');
-        if (detailedContent) {
-            detailedContent.innerText = report.result || "No detailed report provided.";
+        if (detailedContent && report.result) {
+            // Using marked.js to parse markdown
+            detailedContent.innerHTML = marked.parse(report.result);
+            detailedContent.style.whiteSpace = 'normal'; // Reset pre-wrap for rendered HTML
+        } else if (detailedContent) {
+            detailedContent.innerText = "No detailed report provided.";
         }
         
         const sevBadge = document.getElementById('severityBadge');
@@ -201,7 +205,7 @@ if(analyzeBtn) {
             "match_count": 120,
             "log_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "created_at": "2024-10-25 14:00:01",
-            "analysis": "## 인시던트 상세 분석 리포트\n\n**원인 분석**\n현재 시스템의 DB 연결 요청이 임계치를 초과하였습니다. 이는 특정 시간대의 프로모션 트래픽 유입에 따른 것으로 판단됩니다.\n\n**조치 사항**\n1. 커넥션 풀을 20에서 100으로 증설 완료.\n2. 슬로우 쿼리 로그를 기반으로 인덱스 재구성 예정."
+            "analysis": "## Detailed Analysis Technical Report\n\n### 에러 발생 타임라인\n\n| 시각 | 에러 | 심각도 |\n|------|------|--------|\n| 14:02:11 | Connection timeout to DB | CRITICAL |\n| 14:03:45 | Retry 1/3 failed | ERROR |\n\n### 추정 원인\n\nPostgreSQL 연결 풀 소진으로 인한 타임아웃.\n\n### 해결 제안\n\n1. `max_connections` 값을 100 → 200으로 상향 조정\n2. 커넥션 풀 모니터링 알럿 설정"
         };
         
         await fetch('/api/webhook/analysis', {
