@@ -19,8 +19,7 @@ except ImportError:
     from . import models, schemas, database
     from .database import SessionLocal, engine
 
-# Create the database tables
-models.Base.metadata.create_all(bind=engine)
+# Table creation will be handled in the startup_event for better visibility
 
 app = FastAPI(title="Analytica LOG INTELLIGENCE API")
 
@@ -42,9 +41,29 @@ def delete_old_reports(db: Session):
 
 @app.on_event("startup")
 async def startup_event():
+    # Ensure tables are created on startup
+    print(f"Starting up... Database URL matches: {database.SQLALCHEMY_DATABASE_URL[:20]}...")
+    models.Base.metadata.create_all(bind=engine)
+    
     db = SessionLocal()
     delete_old_reports(db)
     db.close()
+
+@app.get("/api/debug/db")
+def debug_db():
+    """Diagnostic endpoint to check database connectivity."""
+    db_url = database.SQLALCHEMY_DATABASE_URL
+    db_type = "PostgreSQL" if db_url.startswith("postgresql") else "SQLite"
+    
+    # Mask password for security
+    masked_url = db_url.split("@")[-1] if "@" in db_url else "Hidden"
+    
+    return {
+        "database_type": db_type,
+        "is_vercel": os.environ.get("VERCEL") is not None,
+        "database_host_check": masked_url,
+        "status": "connected"
+    }
 
 import json
 
