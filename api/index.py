@@ -5,12 +5,17 @@ from datetime import datetime, timedelta
 import os
 import sys
 
-# Vercel entry point at root
+# Add the parent directory to sys.path to ensure backend package is found
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
+
+# Import from backend package
 try:
     from backend import models, schemas, database
     from backend.database import SessionLocal, engine
 except ImportError:
-    # Fallback for local standalone or different structures
+    # Local fallback
     import models, schemas, database
     from database import SessionLocal, engine
 
@@ -39,7 +44,6 @@ def debug_db():
         "status": "connected"
     }
 
-
 # Dependency
 def get_db():
     db = SessionLocal()
@@ -56,7 +60,6 @@ def delete_old_reports(db: Session):
         db.delete(report)
     db.commit()
 
-# --- Endpoint definitions ---
 @app.post("/api/webhook/analysis", response_model=schemas.Report)
 def receive_analysis(payload: schemas.ReportCreate, db: Session = Depends(get_db)):
     data = payload.dict(exclude={"log_entries", "model", "analysis", "created_at"})
@@ -117,11 +120,9 @@ def get_report(trace_id: str, db: Session = Depends(get_db)):
 
 # Serve static files for frontend
 from fastapi.staticfiles import StaticFiles
-base_dir = os.path.dirname(os.path.abspath(__file__))
-frontend_dir = os.path.join(base_dir, "frontend")
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+frontend_dir = os.path.join(project_root, "frontend")
 if os.path.exists(frontend_dir):
     app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="static")
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+# For Vercel, the app object must be named 'app'
