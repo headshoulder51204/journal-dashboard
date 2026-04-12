@@ -239,5 +239,23 @@ def list_reports():
     except Exception as e:
         return {"error": str(e)}
 
+@router.delete("/reports/{report_id}")
+def delete_report(report_id: int):
+    try:
+        models, schemas, database, SessionLocal, engine = get_db_components()
+        db = SessionLocal()
+        try:
+            report = db.query(models.Report).filter(models.Report.id == report_id).first()
+            if not report:
+                raise HTTPException(status_code=404, detail="Report not found")
+            
+            db.delete(report)
+            db.commit()
+            return {"status": "success", "message": f"Report {report_id} deleted"}
+        finally:
+            db.close()
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 # Standard approach: router without prefix + root_path handles it
 app.include_router(router)

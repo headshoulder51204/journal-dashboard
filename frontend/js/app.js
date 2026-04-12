@@ -30,7 +30,14 @@ async function loadReports() {
                 <td><span class="badge ${report.status === 'SUCCESS' ? 'badge-success' : 'badge-error'}">${report.status}</span></td>
                 <td><span style="font-size: 12px; font-weight: 500;">${report.llm_model}</span></td>
                 <td><span class="badge ${report.severity === 'Critical' ? 'badge-error' : 'badge-warning'}">${report.severity}</span></td>
-                <td><a href="details.html?id=${report.trace_id}" class="view-btn">VIEW DETAILS <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i></a></td>
+                <td>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <a href="details.html?id=${report.trace_id}" class="view-btn">VIEW <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i></a>
+                        <button onclick="deleteReport(${report.id})" class="delete-btn" title="Delete Report">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </td>
             `;
             body.appendChild(tr);
         });
@@ -44,6 +51,29 @@ async function loadReports() {
         document.getElementById('criticalErrors').innerText = reports.filter(r => r.severity === 'Critical').length;
     } catch (error) {
         console.error("Error loading reports:", error);
+    }
+}
+
+// Delete report function
+async function deleteReport(id) {
+    if (!confirm("Are you sure you want to delete this report? This action cannot be undone.")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/reports/${id}`, {
+            method: 'DELETE'
+        });
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            loadReports(); // Refresh the list
+        } else {
+            alert("Error deleting report: " + result.message);
+        }
+    } catch (error) {
+        console.error("Delete request failed:", error);
+        alert("Delete request failed. Check console for details.");
     }
 }
 

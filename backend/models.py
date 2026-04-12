@@ -43,7 +43,7 @@ class Report(Base):
     error_count = Column(Integer, default=0)
     result = Column(Text)  # Detailed AI Analysis in Markdown
     
-    log_entries = relationship("LogEntry", back_populates="report")
+    log_entries = relationship("LogEntry", back_populates="report", cascade="all, delete-orphan")
 
 class LogEntry(Base):
     __tablename__ = "log_entries"

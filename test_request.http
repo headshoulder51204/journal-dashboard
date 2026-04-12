@@ -1,5 +1,5 @@
 ### 1. 전송 예시: 최신 프로젝트 구조 (title, model, analysis 매핑 + 상세 메타데이터)
-POST http://localhost:8000/api/webhook/analysis
+POST https://journal-dashboard-omega.vercel.app/api/webhook/analysis
 Content-Type: application/json
 
 {
@@ -32,7 +32,7 @@ Content-Type: application/json
 }
 
 ### 2. 전송 예시: 로그 엔트리 포함 (신규 필드명 적용)
-POST http://localhost:8000/api/webhook/analysis
+POST https://journal-dashboard-omega.vercel.app/api/webhook/analysis
 Content-Type: application/json
 
 {

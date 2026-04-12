@@ -311,3 +311,25 @@ header {
   font-family: 'Fira Code', monospace;
   font-size: 0.9em;
 }
+
+.delete-btn {
+  background: rgba(255, 59, 48, 0.05);
+  color: var(--error);
+  border: 1px solid rgba(255, 59, 48, 0.1);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 14px;
+}
+
+.delete-btn:hover {
+  background: var(--error);
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.2);
+}
