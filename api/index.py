@@ -4,6 +4,7 @@ from typing import List
 from datetime import datetime, timedelta
 import os
 import sys
+import traceback
 from contextlib import asynccontextmanager
 
 # Add the parent directory to sys.path to ensure backend package is found
@@ -17,11 +18,19 @@ try:
     from backend.database import SessionLocal, engine
 except ImportError:
     # Local fallback
-    import models, schemas, database
-    from database import SessionLocal, engine
+    try:
+        import models, schemas, database
+        from database import SessionLocal, engine
+    except ImportError:
+        # Emergency fallback if both fail (though they shouldn't with sys.path fix)
+        raise
+
+# Global variable to capture startup errors
+STARTUP_ERROR = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global STARTUP_ERROR
     # Ensure tables are created on startup
     print(f"DATABASE INITIALIZATION: Checking connection to {database.SQLALCHEMY_DATABASE_URL[:20]}...")
     try:
@@ -34,12 +43,32 @@ async def lifespan(app: FastAPI):
         finally:
             db.close()
     except Exception as e:
+        STARTUP_ERROR = {
+            "error": str(e),
+            "traceback": traceback.format_exc(),
+            "db_url_masked": database.SQLALCHEMY_DATABASE_URL[:20] + "..." if database.SQLALCHEMY_DATABASE_URL else None
+        }
         print(f"DATABASE ERROR during startup: {e}")
     
     yield
-    # Cleanup logic (if needed)
 
 app = FastAPI(title="Analytica LOG INTELLIGENCE API", lifespan=lifespan)
+
+@app.get("/")
+def read_root():
+    """Simple health check to see if the app starts on Vercel."""
+    return {"status": "ok", "message": "Analytica API is running", "environment": "Vercel" if os.environ.get("VERCEL") else "Local"}
+
+@app.get("/api/health")
+def health_check():
+    """Diagnostic endpoint to see startup errors."""
+    return {
+        "status": "up" if STARTUP_ERROR is None else "error",
+        "startup_error": STARTUP_ERROR,
+        "database_url_provided": os.environ.get("DATABASE_URL") is not None,
+        "python_version": sys.version,
+        "cwd": os.getcwd()
+    }
 
 @app.get("/api/debug/db")
 def debug_db():
