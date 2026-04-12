@@ -108,12 +108,14 @@ def read_root(request: Request):
     }
 
 @router.get("/health")
-def health_check(request: Request, force_sync: bool = False):
+def health_check(request: Request, force_sync: bool = False, nuclear_sync: bool = False):
     global STARTUP_ERROR
     
-    if force_sync:
+    if force_sync or nuclear_sync:
         try:
             models, schemas, database, SessionLocal, engine = get_db_components()
+            if nuclear_sync:
+                models.Base.metadata.drop_all(bind=engine)
             models.Base.metadata.create_all(bind=engine)
             STARTUP_ERROR = None # Clear previous error if manual sync succeeds
         except Exception as e:
