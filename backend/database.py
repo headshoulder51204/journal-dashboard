@@ -41,12 +41,15 @@ raw_db_url = os.environ.get("DATABASE_URL")
 SQLALCHEMY_DATABASE_URL = sanitize_db_url(raw_db_url)
 
 if SQLALCHEMY_DATABASE_URL and "postgresql" in SQLALCHEMY_DATABASE_URL:
-    # Optimized settings for Vercel/Serverless + Supabase
+    # Optimized settings for Vercel/Serverless + Supabase (Pooler ready)
     engine = create_engine(
         SQLALCHEMY_DATABASE_URL,
         pool_pre_ping=True,
         pool_recycle=3600,
-        connect_args={"sslmode": "require"}
+        connect_args={
+            "sslmode": "require",
+            "connect_timeout": 10
+        }
     )
 elif SQLALCHEMY_DATABASE_URL and "sqlite" in SQLALCHEMY_DATABASE_URL:
     engine = create_engine(
