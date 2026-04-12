@@ -108,7 +108,22 @@ def read_root(request: Request):
     }
 
 @router.get("/health")
-def health_check(request: Request):
+def health_check(request: Request, force_sync: bool = False):
+    global STARTUP_ERROR
+    
+    if force_sync:
+        try:
+            models, schemas, database, SessionLocal, engine = get_db_components()
+            models.Base.metadata.create_all(bind=engine)
+            STARTUP_ERROR = None # Clear previous error if manual sync succeeds
+        except Exception as e:
+            STARTUP_ERROR = {
+                "type": type(e).__name__,
+                "error": str(e),
+                "traceback": traceback.format_exc(),
+                "timestamp": datetime.utcnow().isoformat()
+            }
+
     return {
         "status": "online",
         "diagnostic": {
