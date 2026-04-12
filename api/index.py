@@ -16,11 +16,14 @@ if BASE_DIR not in sys.path:
 try:
     from backend import models, schemas, database
     from backend.database import SessionLocal, engine
+    # Explicitly import models to ensure they are registered with Base.metadata
+    from backend.models import Report as _Report, LogEntry as _LogEntry
 except ImportError:
     # Local fallback
     try:
         import models, schemas, database
         from database import SessionLocal, engine
+        from models import Report as _Report, LogEntry as _LogEntry
     except ImportError:
         # Emergency fallback if both fail (though they shouldn't with sys.path fix)
         raise
@@ -66,9 +69,28 @@ def health_check():
         "status": "up" if STARTUP_ERROR is None else "error",
         "startup_error": STARTUP_ERROR,
         "database_url_provided": os.environ.get("DATABASE_URL") is not None,
+        "tables_found": list(models.Base.metadata.tables.keys()),
         "python_version": sys.version,
         "cwd": os.getcwd()
     }
+
+@app.get("/api/setup-db")
+def setup_db():
+    """Explicitly triggers table creation and returns results."""
+    results = {
+        "action": "create_all",
+        "database_url": database.SQLALCHEMY_DATABASE_URL[:20] + "..." if database.SQLALCHEMY_DATABASE_URL else None,
+        "success": False,
+        "error": None,
+        "tables_after": []
+    }
+    try:
+        models.Base.metadata.create_all(bind=engine)
+        results["success"] = True
+        results["tables_after"] = list(models.Base.metadata.tables.keys())
+    except Exception as e:
+        results["error"] = str(e)
+    return results
 
 @app.get("/api/debug/db")
 def debug_db():
