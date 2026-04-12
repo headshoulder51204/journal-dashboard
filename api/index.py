@@ -239,7 +239,7 @@ def list_reports():
     except Exception as e:
         return {"error": str(e)}
 
-@router.delete("/reports/{report_id}")
+@router.post("/reports/{report_id}/delete")
 def delete_report(report_id: int):
     try:
         models, schemas, database, SessionLocal, engine = get_db_components()

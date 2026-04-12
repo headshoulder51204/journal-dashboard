@@ -61,8 +61,8 @@ async function deleteReport(id) {
     }
 
     try {
-        const response = await fetch(`/api/reports/${id}`, {
-            method: 'DELETE'
+        const response = await fetch(`/api/reports/${id}/delete`, {
+            method: 'POST'
         });
         const result = await response.json();
         
@@ -113,8 +113,9 @@ async function loadReportDetails(traceId) {
         }
         
         const sevBadge = document.getElementById('severityBadge');
-        sevBadge.innerText = report.severity.toUpperCase();
-        sevBadge.className = report.severity === 'Critical' ? 'badge badge-error' : 'badge badge-warning';
+        const severity = report.severity || "Low";
+        sevBadge.innerText = severity.toUpperCase();
+        sevBadge.className = severity === 'Critical' ? 'badge badge-error' : 'badge badge-warning';
 
         document.getElementById('summaryEvents').innerText = report.total_events.toLocaleString();
         document.getElementById('summaryDuration').innerText = report.duration;
