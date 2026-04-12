@@ -33,7 +33,7 @@ async function loadReports() {
                 <td>
                     <div style="display: flex; gap: 12px; align-items: center;">
                         <a href="details.html?id=${report.trace_id}" class="view-btn">VIEW <i class="fa-solid fa-chevron-right" style="font-size: 10px;"></i></a>
-                        <button onclick="deleteReport(${report.id})" class="delete-btn" title="Delete Report">
+                        <button onclick="deleteReport('${report.id}')" class="delete-btn" title="Delete Report">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
                     </div>
