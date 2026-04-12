@@ -124,8 +124,29 @@ def health_check(request: Request, force_sync: bool = False):
                 "timestamp": datetime.utcnow().isoformat()
             }
 
+    # Mask the URL for verification without leaking sensitive info
+    raw_url = os.environ.get("DATABASE_URL", "Not Set")
+    masked_url = "Not Set"
+    if raw_url != "Not Set":
+        try:
+            parts = raw_url.split("@")
+            prefix = parts[0].split("://")[0]
+            host = parts[-1]
+            masked_url = f"{prefix}://****@{host}"
+        except:
+            masked_url = "Malformed URL"
+
+    db_status = "up" if not STARTUP_ERROR else "error"
+
     return {
         "status": "online",
+        "database": {
+            "status": db_status,
+            "error": STARTUP_ERROR,
+            "masked_url": masked_url,
+            "tables_in_metadata": [] if STARTUP_ERROR else list(get_db_components()[0].Base.metadata.tables.keys()),
+            "url_provided": raw_url != "Not Set"
+        },
         "diagnostic": {
             "startup_error": STARTUP_ERROR,
             "import_error": IMPORT_ERROR,
