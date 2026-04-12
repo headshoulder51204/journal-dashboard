@@ -239,19 +239,39 @@ def list_reports():
     except Exception as e:
         return {"error": str(e)}
 
-@router.post("/reports/{report_id}/delete")
-def delete_report(report_id: int):
+@router.get("/reports/{trace_id}")
+def get_report(trace_id: str):
     try:
         models, schemas, database, SessionLocal, engine = get_db_components()
         db = SessionLocal()
         try:
-            report = db.query(models.Report).filter(models.Report.id == report_id).first()
+            report = db.query(models.Report).filter(models.Report.trace_id == trace_id).first()
+            if not report:
+                raise HTTPException(status_code=404, detail="Report not found")
+            return report
+        finally:
+            db.close()
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@router.post("/reports/{report_id}/delete")
+def delete_report(report_id: str): # Change to str for safety, cast inside
+    try:
+        models, schemas, database, SessionLocal, engine = get_db_components()
+        db = SessionLocal()
+        try:
+            # Try to find by integer ID first, then by trace_id if needed
+            rid = int(report_id) if report_id.isdigit() else -1
+            report = db.query(models.Report).filter(
+                (models.Report.id == rid) | (models.Report.trace_id == report_id)
+            ).first()
+            
             if not report:
                 raise HTTPException(status_code=404, detail="Report not found")
             
             db.delete(report)
             db.commit()
-            return {"status": "success", "message": f"Report {report_id} deleted"}
+            return {"status": "success", "message": f"Report deleted successfully"}
         finally:
             db.close()
     except Exception as e:

@@ -117,9 +117,9 @@ async function loadReportDetails(traceId) {
         sevBadge.innerText = severity.toUpperCase();
         sevBadge.className = severity === 'Critical' ? 'badge badge-error' : 'badge badge-warning';
 
-        document.getElementById('summaryEvents').innerText = report.total_events.toLocaleString();
-        document.getElementById('summaryDuration').innerText = report.duration;
-        document.getElementById('summaryNodes').innerText = report.affected_nodes;
+        document.getElementById('summaryEvents').innerText = (report.total_events || 0).toLocaleString();
+        document.getElementById('summaryDuration').innerText = report.duration || "N/A";
+        document.getElementById('summaryNodes').innerText = report.affected_nodes || 0;
 
         // Recommendations
         const recList = document.getElementById('recommendationsList');
