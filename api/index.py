@@ -30,30 +30,44 @@ except ImportError:
 # Global variable to capture startup errors
 STARTUP_ERROR = None
 
+# Vercel-friendly initialization
+IS_VERCEL = os.environ.get("VERCEL") == "1"
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global STARTUP_ERROR
-    print(f"DATABASE INITIALIZATION: Checking connection to {database.SQLALCHEMY_DATABASE_URL[:20]}...")
+    print(f"DATABASE INITIALIZATION: Checking connection to {database.SQLALCHEMY_DATABASE_URL[:20] if database.SQLALCHEMY_DATABASE_URL else 'None'}...")
     try:
+        # 1. Synchronize Schema (Safe mode for Supabase)
+        print("DATABASE INITIALIZATION: Synchronizing metadata...")
         models.Base.metadata.create_all(bind=engine)
-        print("DATABASE INITIALIZATION: Tables created or verified successfully.")
+        print("DATABASE INITIALIZATION: Metadata synchronized successfully.")
         
+        # 2. Test Connection
+        with engine.connect() as conn:
+            conn.execute(database.text("SELECT 1"))
+        print("DATABASE INITIALIZATION: Connection test PASSED.")
+        
+        # 3. Initial Maintenance
+        print("DATABASE INITIALIZATION: Running initial maintenance...")
         db = SessionLocal()
         try:
             delete_old_reports(db)
         finally:
             db.close()
+            
     except Exception as e:
+        # Capture error but ALOW startup to proceed so we can see the error in /api/health
         STARTUP_ERROR = {
+            "type": type(e).__name__,
             "error": str(e),
             "traceback": traceback.format_exc(),
+            "timestamp": datetime.utcnow().isoformat(),
             "db_url_masked": database.SQLALCHEMY_DATABASE_URL[:20] + "..." if database.SQLALCHEMY_DATABASE_URL else None
         }
         print(f"DATABASE ERROR during startup: {e}")
     yield
 
-# Vercel-friendly initialization
-IS_VERCEL = os.environ.get("VERCEL") == "1"
 app = FastAPI(
     title="Analytica LOG INTELLIGENCE API", 
     lifespan=lifespan,
@@ -91,14 +105,29 @@ def read_root(request: Request):
 
 @router.get("/health")
 def health_check(request: Request):
+    db_status = "up"
+    if STARTUP_ERROR:
+        db_status = "error"
+    
     return {
-        "status": "up" if STARTUP_ERROR is None else "error",
-        "startup_error": STARTUP_ERROR,
-        "database_url_provided": os.environ.get("DATABASE_URL") is not None,
-        "tables_found": list(models.Base.metadata.tables.keys()),
-        "python_version": sys.version,
-        "request_path": request.url.path,
-        "root_path": request.scope.get("root_path")
+        "status": "online",
+        "database": {
+            "status": db_status,
+            "error": STARTUP_ERROR,
+            "tables_in_metadata": list(models.Base.metadata.tables.keys()),
+            "url_provided": os.environ.get("DATABASE_URL") is not None
+        },
+        "system": {
+            "python_version": sys.version,
+            "platform": sys.platform,
+            "environment": "Vercel" if IS_VERCEL else "Local",
+            "cwd": os.getcwd()
+        },
+        "routing": {
+            "request_path": request.url.path,
+            "root_path": request.scope.get("root_path"),
+            "is_vercel": IS_VERCEL
+        }
     }
 
 @router.get("/setup-db")

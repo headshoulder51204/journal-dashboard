@@ -40,10 +40,20 @@ def sanitize_db_url(url: str) -> str:
 raw_db_url = os.environ.get("DATABASE_URL")
 SQLALCHEMY_DATABASE_URL = sanitize_db_url(raw_db_url)
 
-if SQLALCHEMY_DATABASE_URL:
-    engine = create_engine(SQLALCHEMY_DATABASE_URL)
+if SQLALCHEMY_DATABASE_URL and "postgresql" in SQLALCHEMY_DATABASE_URL:
+    # Optimized settings for Vercel/Serverless + Supabase
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL,
+        pool_pre_ping=True,
+        pool_recycle=3600,
+        connect_args={"sslmode": "require"}
+    )
+elif SQLALCHEMY_DATABASE_URL and "sqlite" in SQLALCHEMY_DATABASE_URL:
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    )
 else:
-    # Fallback logic for SQLite
+    # Default SQLite fallback
     if os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV"):
         SQLALCHEMY_DATABASE_URL = "sqlite:////tmp/sql_app.db"
     else:
