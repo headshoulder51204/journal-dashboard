@@ -4,6 +4,7 @@ from typing import List
 from datetime import datetime, timedelta
 import os
 import sys
+from contextlib import asynccontextmanager
 
 # Add the parent directory to sys.path to ensure backend package is found
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -19,17 +20,26 @@ except ImportError:
     import models, schemas, database
     from database import SessionLocal, engine
 
-app = FastAPI(title="Analytica LOG INTELLIGENCE API")
-
-@app.on_event("startup")
-async def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     # Ensure tables are created on startup
-    print(f"Starting up... Database URL matches: {database.SQLALCHEMY_DATABASE_URL[:20]}...")
-    models.Base.metadata.create_all(bind=engine)
+    print(f"DATABASE INITIALIZATION: Checking connection to {database.SQLALCHEMY_DATABASE_URL[:20]}...")
+    try:
+        models.Base.metadata.create_all(bind=engine)
+        print("DATABASE INITIALIZATION: Tables created or verified successfully.")
+        
+        db = SessionLocal()
+        try:
+            delete_old_reports(db)
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"DATABASE ERROR during startup: {e}")
     
-    db = SessionLocal()
-    delete_old_reports(db)
-    db.close()
+    yield
+    # Cleanup logic (if needed)
+
+app = FastAPI(title="Analytica LOG INTELLIGENCE API", lifespan=lifespan)
 
 @app.get("/api/debug/db")
 def debug_db():
