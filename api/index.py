@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks, APIRouter
+from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks, APIRouter, Request
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime, timedelta
@@ -35,7 +35,6 @@ async def lifespan(app: FastAPI):
     global STARTUP_ERROR
     print(f"DATABASE INITIALIZATION: Checking connection to {database.SQLALCHEMY_DATABASE_URL[:20]}...")
     try:
-        # Load models into metadata (already done by imports above)
         models.Base.metadata.create_all(bind=engine)
         print("DATABASE INITIALIZATION: Tables created or verified successfully.")
         
@@ -53,7 +52,14 @@ async def lifespan(app: FastAPI):
         print(f"DATABASE ERROR during startup: {e}")
     yield
 
-app = FastAPI(title="Analytica LOG INTELLIGENCE API", lifespan=lifespan)
+# Vercel-friendly initialization
+IS_VERCEL = os.environ.get("VERCEL") == "1"
+app = FastAPI(
+    title="Analytica LOG INTELLIGENCE API", 
+    lifespan=lifespan,
+    root_path="/api" if IS_VERCEL else ""
+)
+
 router = APIRouter()
 
 def get_db():
@@ -67,7 +73,6 @@ def delete_old_reports(db: Session):
     """Deletes reports older than 24 hours."""
     cutoff = datetime.utcnow() - timedelta(hours=24)
     try:
-        # Use date_generated as defined in backend/models.py
         db.query(models.Report).filter(models.Report.date_generated < cutoff).delete()
         db.commit()
     except Exception as e:
@@ -75,22 +80,29 @@ def delete_old_reports(db: Session):
         db.rollback()
 
 @router.get("/")
-def read_root():
-    return {"status": "ok", "message": "Analytica API is running", "environment": "Vercel" if os.environ.get("VERCEL") else "Local"}
+def read_root(request: Request):
+    return {
+        "status": "ok", 
+        "message": "Analytica API is running", 
+        "environment": "Vercel" if IS_VERCEL else "Local",
+        "path": request.url.path,
+        "root_path": request.scope.get("root_path")
+    }
 
 @router.get("/health")
-def health_check():
+def health_check(request: Request):
     return {
         "status": "up" if STARTUP_ERROR is None else "error",
         "startup_error": STARTUP_ERROR,
         "database_url_provided": os.environ.get("DATABASE_URL") is not None,
         "tables_found": list(models.Base.metadata.tables.keys()),
         "python_version": sys.version,
+        "request_path": request.url.path,
+        "root_path": request.scope.get("root_path")
     }
 
 @router.get("/setup-db")
 def setup_db():
-    """Manually trigger table creation for Supabase."""
     results = {"action": "create_all", "success": False, "error": None, "tables_after": []}
     try:
         models.Base.metadata.create_all(bind=engine)
@@ -110,8 +122,6 @@ def debug_db():
 
 @router.post("/webhook/analysis")
 async def receive_analysis(report: schemas.ReportCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
-    # Map incoming schema to database model
-    # Note: Report model uses 'llm_model' for model and 'result' for analysis text
     db_report = models.Report(
         trace_id=report.trace_id or str(uuid.uuid4()),
         title=report.title,
@@ -127,7 +137,6 @@ async def receive_analysis(report: schemas.ReportCreate, background_tasks: Backg
         error_count=getattr(report, 'error_count', 0)
     )
     
-    # Map additional fields if present in schema
     if hasattr(report, 'root_cause') and report.root_cause:
         db_report.root_cause = report.root_cause
     if hasattr(report, 'recommendations') and report.recommendations:
@@ -156,7 +165,6 @@ async def receive_analysis(report: schemas.ReportCreate, background_tasks: Backg
 
 @router.get("/reports", response_model=List[schemas.Report])
 def list_reports(db: Session = Depends(get_db)):
-    # Match schema date_generated to model field
     return db.query(models.Report).order_by(models.Report.date_generated.desc()).all()
 
 @router.get("/reports/{report_id}", response_model=schemas.Report)
@@ -166,6 +174,5 @@ def get_report(report_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Report not found")
     return report
 
-# Include router twice to handle both /api and root paths on Vercel
-app.include_router(router, prefix="/api")
+# Standard approach: router without prefix + root_path handles it
 app.include_router(router)
