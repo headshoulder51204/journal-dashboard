@@ -5,19 +5,33 @@ function formatDate(dateString) {
 }
 
 // Fetch list of reports for index page
-async function loadReports() {
+async function loadReports(filters = {}) {
     const body = document.getElementById('reportsTableBody');
     if (!body) return;
 
     try {
-        const response = await fetch('/api/reports');
+        // Build query string
+        const params = new URLSearchParams();
+        if (filters.title) params.append('title', filters.title);
+        if (filters.dateFrom) params.append('date_from', filters.dateFrom);
+        if (filters.dateTo) params.append('date_to', filters.dateTo);
+
+        const url = `/api/reports${params.toString() ? '?' + params.toString() : ''}`;
+        const response = await fetch(url);
         const reports = await response.json();
 
-        if (reports.length === 0) {
+        if (!reports || reports.length === 0) {
+            body.innerHTML = '';
             document.getElementById('noDataMessage').style.display = 'block';
+            // Reset stats if no data
+            document.getElementById('totalAnalyzed').innerText = '0';
+            document.getElementById('successRate').innerText = '0%';
+            document.getElementById('successProgress').style.width = '0%';
+            document.getElementById('criticalErrors').innerText = '0';
             return;
         }
 
+        document.getElementById('noDataMessage').style.display = 'none';
         body.innerHTML = '';
         reports.forEach(report => {
             const tr = document.createElement('tr');

@@ -62,7 +62,7 @@ async def lifespan(app: FastAPI):
         # 3. Initial Maintenance
         db = SessionLocal()
         try:
-            cutoff = datetime.utcnow() - timedelta(hours=24)
+            cutoff = datetime.utcnow() - timedelta(days=30)
             db.query(models.Report).filter(models.Report.date_generated < cutoff).delete()
             db.commit()
         finally:
@@ -205,10 +205,10 @@ async def receive_analysis(
                     db.add(db_entry)
                 db.commit()
             
-            # Simple cleanup task
+            # Simple cleanup task (30-day retention)
             def safe_cleanup():
                 try:
-                    cutoff = datetime.utcnow() - timedelta(hours=24)
+                    cutoff = datetime.utcnow() - timedelta(days=30)
                     db.query(models.Report).filter(models.Report.date_generated < cutoff).delete()
                     db.commit()
                 except Exception:
@@ -228,12 +228,38 @@ async def receive_analysis(
         }
 
 @router.get("/reports")
-def list_reports():
+def list_reports(
+    title: Optional[str] = None, 
+    date_from: Optional[str] = None, 
+    date_to: Optional[str] = None
+):
     try:
         models, schemas, database, SessionLocal, engine = get_db_components()
         db = SessionLocal()
         try:
-            return db.query(models.Report).order_by(models.Report.date_generated.desc()).all()
+            query = db.query(models.Report)
+            
+            if title:
+                query = query.filter(models.Report.title.ilike(f"%{title}%"))
+            
+            if date_from:
+                try:
+                    df = datetime.fromisoformat(date_from.replace('Z', ''))
+                    query = query.filter(models.Report.date_generated >= df)
+                except ValueError:
+                    pass
+            
+            if date_to:
+                try:
+                    dt = datetime.fromisoformat(date_to.replace('Z', ''))
+                    # Ensure it includes the whole day if only date is provided
+                    if dt.hour == 0 and dt.minute == 0:
+                        dt = dt + timedelta(days=1) - timedelta(seconds=1)
+                    query = query.filter(models.Report.date_generated <= dt)
+                except ValueError:
+                    pass
+                    
+            return query.order_by(models.Report.date_generated.desc()).all()
         finally:
             db.close()
     except Exception as e:

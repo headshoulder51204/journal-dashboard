@@ -20,7 +20,7 @@
         <a href="index.html" class="nav-item">
             <i class="fa-solid fa-file-invoice"></i> Reports
         </a>
-        <a href="#" class="nav-item">
+        <a href="javascript:void(0)" class="nav-item" id="searchNav">
             <i class="fa-solid fa-magnifying-glass"></i> Search
         </a>
         <div style="flex-grow: 1;"></div>
@@ -40,6 +40,31 @@
             </button>
         </div>
     </header>
+
+    <section id="searchPanel" class="search-panel">
+        <div class="search-grid">
+            <div class="search-field">
+                <label><i class="fa-solid fa-heading"></i> Title / Host</label>
+                <input type="text" id="searchTitle" placeholder="Search by title or host name...">
+            </div>
+            <div class="search-field">
+                <label><i class="fa-solid fa-calendar-day"></i> From</label>
+                <input type="date" id="searchDateFrom">
+            </div>
+            <div class="search-field">
+                <label><i class="fa-solid fa-calendar-day"></i> To</label>
+                <input type="date" id="searchDateTo">
+            </div>
+            <div class="search-actions">
+                <button class="btn btn-primary" id="applySearchBtn">
+                    <i class="fa-solid fa-magnifying-glass"></i> Search
+                </button>
+                <button class="btn btn-secondary" id="clearSearchBtn">
+                    <i class="fa-solid fa-rotate-left"></i> Clear
+                </button>
+            </div>
+        </div>
+    </section>
 
     <section class="stats-container">
         <div class="stat-card">
