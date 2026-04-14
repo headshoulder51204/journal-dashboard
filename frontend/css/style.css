@@ -423,3 +423,18 @@ header {
   filter: brightness(1.1);
   transform: translateY(-1px);
 }
+
+.settings-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: var(--card-radius);
+    padding: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+}
+
+.settings-card h3 i {
+    color: var(--primary);
+    margin-right: 8px;
+}

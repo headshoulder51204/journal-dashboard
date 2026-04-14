@@ -214,34 +214,73 @@ function renderChart(data) {
 // Initial load for index
 if (document.getElementById('reportsTableBody')) {
     loadReports();
-}
-// Listen for analyze button (Mocking behavior for demonstration)
-const analyzeBtn = document.getElementById('analyzeBtn');
-if(analyzeBtn) {
-    analyzeBtn.onclick = async () => {
-        alert("Mock: Sending new formatted analysis data to webhook...");
-        const mockData = {
-            "title": "TEST-JSON-OBJ-" + Math.floor(Math.random()*1000),
-            "host": "localhost",
-            "log_file": "/var/log/syslog",
-            "since": "2024-10-25 14:00:01",
-            "until": "2024-10-25 15:30:00",
-            "unit": "minute",
-            "model": "GPT-4o",
-            "tokens_used": 1540,
-            "chunks_analyzed": 12,
-            "total_lines": 5000,
-            "match_count": 120,
-            "log_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-            "created_at": "2024-10-25 14:00:01",
-            "analysis": "## Detailed Analysis Technical Report\n\n### 에러 발생 타임라인\n\n| 시각 | 에러 | 심각도 |\n|------|------|--------|\n| 14:02:11 | Connection timeout to DB | CRITICAL |\n| 14:03:45 | Retry 1/3 failed | ERROR |\n\n### 추정 원인\n\nPostgreSQL 연결 풀 소진으로 인한 타임아웃.\n\n### 해결 제안\n\n1. `max_connections` 값을 100 → 200으로 상향 조정\n2. 커넥션 풀 모니터링 알럿 설정"
+
+    // --- Search Toggle & Logic ---
+    const searchNav = document.getElementById('searchNav');
+    const searchPanel = document.getElementById('searchPanel');
+    const applySearchBtn = document.getElementById('applySearchBtn');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    
+    // UI Toggle
+    if (searchNav && searchPanel) {
+        searchNav.onclick = () => {
+            searchPanel.classList.toggle('visible');
+            searchNav.classList.toggle('active');
         };
-        
-        await fetch('/api/webhook/analysis', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(mockData)
-        });
-        loadReports();
-    };
+    }
+
+    // Apply Filter
+    if (applySearchBtn) {
+        applySearchBtn.onclick = () => {
+            const filters = {
+                title: document.getElementById('searchTitle').value,
+                dateFrom: document.getElementById('searchDateFrom').value,
+                dateTo: document.getElementById('searchDateTo').value
+            };
+            loadReports(filters);
+        };
+    }
+
+    // Clear Filter
+    if (clearSearchBtn) {
+        clearSearchBtn.onclick = () => {
+            document.getElementById('searchTitle').value = '';
+            document.getElementById('searchDateFrom').value = '';
+            document.getElementById('searchDateTo').value = '';
+            loadReports();
+        };
+    }
+
+    // --- Settings View Logic ---
+    const settingsNav = document.getElementById('settingsNav');
+    const reportsView = document.getElementById('reportsView');
+    const settingsView = document.getElementById('settingsView');
+    const dashboardNav = document.getElementById('dashboardNav');
+
+    if (settingsNav && reportsView && settingsView) {
+        settingsNav.onclick = (e) => {
+            e.preventDefault();
+            reportsView.style.display = 'none';
+            settingsView.style.display = 'block';
+            
+            // UI state
+            settingsNav.classList.add('active');
+            if (dashboardNav) dashboardNav.classList.remove('active');
+            if (searchPanel) searchPanel.classList.remove('visible');
+            if (searchNav) searchNav.classList.remove('active');
+        };
+    }
+
+    if (dashboardNav && reportsView && settingsView) {
+        dashboardNav.onclick = (e) => {
+            e.preventDefault();
+            reportsView.style.display = 'block';
+            settingsView.style.display = 'none';
+            
+            // UI state
+            dashboardNav.classList.add('active');
+            if (settingsNav) settingsNav.classList.remove('active');
+            loadReports(); // Refresh data when coming back
+        };
+    }
 }
