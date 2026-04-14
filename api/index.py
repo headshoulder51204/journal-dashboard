@@ -79,7 +79,7 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(
-    title="Analytica LOG INTELLIGENCE API (Safe Mode)", 
+    title="LogBrief LOG INTELLIGENCE API (Safe Mode)", 
     lifespan=lifespan,
     root_path="/api" if IS_VERCEL else ""
 )

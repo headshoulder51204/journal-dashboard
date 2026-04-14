@@ -100,8 +100,6 @@ async function loadReportDetails(traceId) {
         // Update basic info
         document.getElementById('detailTitle').innerText = report.title || `Trace ID #${report.trace_id}`;
         document.getElementById('llmModelName').innerText = report.llm_model;
-        document.getElementById('rootCauseText').innerText = report.root_cause || "Root cause analysis not available.";
-        document.getElementById('anomalyContext').innerText = report.anomaly_context || "No context provided.";
 
         // Update Metadata section
         if (document.getElementById('metaHost')) {
@@ -134,20 +132,6 @@ async function loadReportDetails(traceId) {
         document.getElementById('summaryEvents').innerText = (report.total_events || 0).toLocaleString();
         document.getElementById('summaryDuration').innerText = report.duration || "N/A";
         document.getElementById('summaryNodes').innerText = report.affected_nodes || 0;
-
-        // Recommendations
-        const recList = document.getElementById('recommendationsList');
-        recList.innerHTML = '';
-        report.recommendations.forEach(action => {
-            const li = document.createElement('li');
-            li.style.display = 'flex';
-            li.style.gap = '12px';
-            li.innerHTML = `
-                <i class="fa-solid fa-circle-check" style="color: var(--success); margin-top: 4px;"></i>
-                <span style="font-size: 14px;">${action}</span>
-            `;
-            recList.appendChild(li);
-        });
 
         // Logs
         const logContainer = document.getElementById('logItemsContainer');

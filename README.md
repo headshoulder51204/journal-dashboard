@@ -1,4 +1,4 @@
-# Analytica Log Intelligence Dashboard (LLM-Powered)
+# LogBrief Log Intelligence Dashboard (LLM-Powered)
 
 This project is a modern, high-performance log analysis dashboard that collects and visualizes AI-generated analysis results of system journal logs. It is designed with **iOS Design Principles** (Glassmorphism, clean typography, rounded corners) to provide a premium user experience.
 
