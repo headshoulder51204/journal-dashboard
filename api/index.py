@@ -62,7 +62,7 @@ async def lifespan(app: FastAPI):
         # 3. Initial Maintenance
         db = SessionLocal()
         try:
-            cutoff = datetime.utcnow() - timedelta(days=30)
+            cutoff = datetime.utcnow() - timedelta(days=100)
             db.query(models.Report).filter(models.Report.date_generated < cutoff).delete()
             db.commit()
         finally:
@@ -205,10 +205,10 @@ async def receive_analysis(
                     db.add(db_entry)
                 db.commit()
             
-            # Simple cleanup task (30-day retention)
+            # Simple cleanup task (100-day retention)
             def safe_cleanup():
                 try:
-                    cutoff = datetime.utcnow() - timedelta(days=30)
+                    cutoff = datetime.utcnow() - timedelta(days=100)
                     db.query(models.Report).filter(models.Report.date_generated < cutoff).delete()
                     db.commit()
                 except Exception:
